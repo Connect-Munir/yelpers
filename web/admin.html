@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin · LEADHARVEST</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Space+Mono:wght@400;700&family=Newsreader:ital,opsz@1,18..72&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/tailwind.config.js"></script>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+
+<body class="bg-ink text-paper font-display antialiased min-h-screen">
+
+  <!-- Gate: shown until we confirm the visitor is an admin -->
+  <div id="gate" class="fixed inset-0 grid place-items-center bg-ink z-50">
+    <div class="text-center">
+      <div class="font-mono text-sm text-muted">Checking access…</div>
+      <div id="gateError" class="hidden mt-4 max-w-sm">
+        <p class="text-coral text-sm" id="gateErrorMsg">Access denied.</p>
+        <a href="index.html" class="inline-block mt-4 rounded-full bg-paper text-ink text-sm font-semibold px-4 py-2 hover:bg-lime transition-colors">← Back to site</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="panel" class="hidden">
+    <!-- Nav -->
+    <header class="border-b hairline">
+      <div class="mx-auto max-w-6xl px-5 sm:px-8 py-4 flex items-center justify-between">
+        <a href="index.html" class="flex items-center gap-2.5 group">
+          <span class="grid place-items-center h-8 w-8 rounded-md bg-coral text-ink font-mono font-bold text-sm rotate-3 group-hover:rotate-0 transition-transform">L</span>
+          <span class="font-mono text-sm tracking-tight">LEAD<span class="text-coral">HARVEST</span> <span class="text-muted">/ admin</span></span>
+        </a>
+        <div class="flex items-center gap-3">
+          <span id="meLabel" class="hidden sm:block font-mono text-[11px] text-muted"></span>
+          <a href="index.html" class="rounded-full border hairline px-3 py-1.5 text-sm hover:border-coral transition-colors">Back to site</a>
+          <button id="logoutBtn" class="rounded-full bg-coral/10 text-coral px-3 py-1.5 text-sm hover:bg-coral/20 transition-colors">Sign out</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-6xl px-5 sm:px-8 py-10">
+      <div class="mb-8">
+        <p class="font-mono text-xs uppercase tracking-[0.25em] text-lime mb-3">Admin · user management</p>
+        <h1 class="font-display font-bold text-[clamp(1.8rem,4vw,2.8rem)] leading-tight">Everyone with an account</h1>
+      </div>
+
+      <!-- Stats -->
+      <dl class="grid grid-cols-2 sm:grid-cols-3 gap-px bg-paper/5 rounded-2xl overflow-hidden border hairline mb-8">
+        <div class="bg-coal p-5">
+          <dd id="statTotal" class="font-display font-bold text-3xl">—</dd>
+          <dt class="font-mono text-[11px] uppercase tracking-wider text-muted mt-1">Total users</dt>
+        </div>
+        <div class="bg-coal p-5">
+          <dd id="statAdmins" class="font-display font-bold text-3xl">—</dd>
+          <dt class="font-mono text-[11px] uppercase tracking-wider text-muted mt-1">Admins</dt>
+        </div>
+        <div class="bg-coal p-5">
+          <dd id="statInactive" class="font-display font-bold text-3xl">—</dd>
+          <dt class="font-mono text-[11px] uppercase tracking-wider text-muted mt-1">Inactive</dt>
+        </div>
+      </dl>
+
+      <!-- Toolbar -->
+      <div class="flex flex-wrap items-center gap-3 mb-5">
+        <input id="searchInput" type="text" placeholder="Search name or email…"
+          class="flex-1 min-w-[200px] rounded-xl bg-coal border hairline px-4 py-2.5 text-sm text-paper placeholder-muted/50 focus:outline-none focus:border-coral transition-colors" />
+        <button id="refreshBtn" class="rounded-xl border hairline px-4 py-2.5 text-sm font-mono text-muted hover:text-paper hover:border-lime/40 transition-colors">refresh</button>
+      </div>
+
+      <!-- Table -->
+      <div class="rounded-2xl border hairline bg-coal/60 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="font-mono text-[11px] uppercase tracking-wider text-muted border-b hairline">
+              <tr>
+                <th class="text-left px-5 py-3 font-normal">User</th>
+                <th class="text-left px-5 py-3 font-normal">Role</th>
+                <th class="text-left px-5 py-3 font-normal">Status</th>
+                <th class="text-left px-5 py-3 font-normal">Joined</th>
+                <th class="text-right px-5 py-3 font-normal">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="usersBody" class="divide-y divide-paper/5">
+              <tr><td colspan="5" class="px-5 py-10 text-center text-muted">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="flex items-center justify-between px-5 py-3 border-t hairline font-mono text-[11px] text-muted">
+          <span id="usersCount">—</span>
+          <div class="flex items-center gap-3">
+            <button id="prevPage" class="hover:text-paper transition-colors disabled:opacity-40" disabled>← prev</button>
+            <span id="pageInfo">page 1</span>
+            <button id="nextPage" class="hover:text-paper transition-colors disabled:opacity-40" disabled>next →</button>
+          </div>
+        </div>
+      </div>
+
+      <p id="toast" class="hidden fixed bottom-6 right-6 rounded-xl border hairline bg-coal px-4 py-3 text-sm shadow-2xl"></p>
+    </main>
+  </div>
+
+  <script src="js/admin.js" defer></script>
+</body>
+</html>

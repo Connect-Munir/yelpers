@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard · LEADHARVEST</title>
+  <meta name="description" content="Compose a Yelp scrape, watch it run live, and browse your de-duplicated leads." />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Space+Mono:wght@400;700&family=Newsreader:ital,opsz@1,18..72&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/tailwind.config.js"></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+
+<body class="grain bg-ink text-paper font-display antialiased min-h-screen overflow-x-hidden">
+
+  <!-- ░░ GATE — shown until we confirm a signed-in visitor ░░ -->
+  <div id="gate" class="fixed inset-0 grid place-items-center bg-ink z-50 px-6">
+    <div class="text-center">
+      <div id="gateSpinner" class="flex items-center gap-2 font-mono text-sm text-muted">
+        <svg class="animate-spin h-4 w-4 text-coral" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-90" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.4 0 0 5.4 0 12h4z"/></svg>
+        Opening your dashboard…
+      </div>
+      <div id="gateError" class="hidden mt-2 max-w-sm">
+        <p class="text-coral text-sm" id="gateErrorMsg">Access denied.</p>
+        <a href="index.html" class="inline-block mt-5 rounded-full bg-paper text-ink text-sm font-semibold px-4 py-2 hover:bg-lime transition-colors">← Back to home</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ░░ PANEL ░░ -->
+  <div id="panel" class="hidden mesh min-h-screen">
+
+    <!-- Nav -->
+    <header class="sticky top-0 z-40 border-b hairline bg-ink/80 backdrop-blur-xl">
+      <div class="mx-auto max-w-7xl px-5 sm:px-8 py-4 flex items-center justify-between">
+        <a href="index.html" class="flex items-center gap-2.5 group">
+          <span class="grid place-items-center h-8 w-8 rounded-md bg-coral text-ink font-mono font-bold text-sm rotate-3 group-hover:rotate-0 transition-transform">L</span>
+          <span class="font-mono text-sm tracking-tight">LEAD<span class="text-coral">HARVEST</span> <span class="text-muted">/ dashboard</span></span>
+        </a>
+        <div class="flex items-center gap-2 sm:gap-3">
+          <span id="meLabel" class="hidden sm:block font-mono text-[11px] text-muted max-w-[180px] truncate"></span>
+          <a id="adminLink" href="admin.html" class="hidden rounded-full border hairline px-3 py-1.5 text-sm text-lime hover:border-lime/50 transition-colors">Admin</a>
+          <a href="index.html" class="rounded-full border hairline px-3 py-1.5 text-sm hover:border-coral transition-colors">Home</a>
+          <button id="logoutBtn" class="rounded-full bg-coral/10 text-coral px-3 py-1.5 text-sm hover:bg-coral/20 transition-colors">Sign out</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-7xl px-5 sm:px-8 py-10 sm:py-12">
+
+      <!-- Heading -->
+      <div class="mb-10">
+        <p class="font-mono text-xs uppercase tracking-[0.25em] text-lime mb-3">Your workspace</p>
+        <h1 class="font-display font-bold text-[clamp(1.9rem,4.5vw,3rem)] leading-[0.95] tracking-tight">
+          Harvest, then <span class="text-coral">browse</span>.
+        </h1>
+        <p class="mt-3 max-w-xl text-muted leading-relaxed">
+          Compose a run, watch it stream in live, and work the de-duplicated
+          leads saved straight to <span class="font-mono text-ember text-sm">your workspace</span>.
+        </p>
+      </div>
+
+      <!-- Live stats -->
+      <dl class="grid grid-cols-2 sm:grid-cols-4 gap-px bg-paper/5 rounded-2xl overflow-hidden border hairline mb-10">
+        <div class="bg-coal p-5">
+          <dd id="statLeads" class="font-display font-bold text-3xl">0</dd>
+          <dt class="font-mono text-[11px] uppercase tracking-wider text-muted mt-1">Total leads</dt>
+        </div>
+        <div class="bg-coal p-5">
+          <dd id="statNiches" class="font-display font-bold text-3xl">0</dd>
+          <dt class="font-mono text-[11px] uppercase tracking-wider text-muted mt-1">Niches</dt>
+        </div>
+        <div class="bg-coal p-5">
+          <dd id="statWebsites" class="font-display font-bold text-3xl">0</dd>
+          <dt class="font-mono text-[11px] uppercase tracking-wider text-muted mt-1">With website</dt>
+        </div>
+        <div class="bg-coal p-5">
+          <dd id="statPhones" class="font-display font-bold text-3xl">0</dd>
+          <dt class="font-mono text-[11px] uppercase tracking-wider text-muted mt-1">With phone</dt>
+        </div>
+      </dl>
+
+      <!-- ░░ RUN A SCRAPE ░░ -->
+      <section class="relative overflow-hidden rounded-[28px] border hairline bg-coal p-7 sm:p-10 mb-12">
+        <div class="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-coral/20 blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-lime/10 blur-3xl pointer-events-none"></div>
+
+        <div class="relative grid lg:grid-cols-2 gap-10 items-start">
+          <div>
+            <p class="font-mono text-xs uppercase tracking-[0.25em] text-lime mb-4">Compose your run</p>
+            <h2 class="font-display font-bold text-[clamp(1.6rem,4vw,2.4rem)] leading-tight tracking-tight">
+              Niche, city, go.
+            </h2>
+            <p class="mt-4 text-muted leading-relaxed max-w-md text-sm">
+              A browser window opens for a quick one-time verification;
+              after that the run flows and fresh leads stream in below.
+            </p>
+
+            <form id="runForm" class="mt-7 space-y-4 max-w-md">
+              <div class="grid sm:grid-cols-2 gap-4">
+                <label class="block">
+                  <span class="font-mono text-[11px] uppercase tracking-wider text-muted">Niche</span>
+                  <input id="termInput" type="text" value="med spas" placeholder="plumbers"
+                    class="mt-2 w-full rounded-xl bg-ink border hairline px-4 py-3 text-paper placeholder-muted/50 focus:outline-none focus:border-coral transition-colors" />
+                </label>
+                <label class="block">
+                  <span class="font-mono text-[11px] uppercase tracking-wider text-muted">Location</span>
+                  <input id="locInput" type="text" value="Austin, TX" placeholder="Austin, TX"
+                    class="mt-2 w-full rounded-xl bg-ink border hairline px-4 py-3 text-paper placeholder-muted/50 focus:outline-none focus:border-coral transition-colors" />
+                </label>
+              </div>
+              <label class="block">
+                <span class="font-mono text-[11px] uppercase tracking-wider text-muted">Max results — <span id="maxVal" class="text-lime">30</span></span>
+                <input id="maxInput" type="range" min="10" max="120" step="10" value="30"
+                  class="mt-3 w-full accent-coral" />
+              </label>
+
+              <div class="flex flex-wrap items-center gap-x-6 gap-y-2 pt-1 font-mono text-[11px] text-muted">
+                <label class="inline-flex items-center gap-2 cursor-pointer">
+                  <input id="maxAllInput" type="checkbox" class="accent-coral" />
+                  scrape ALL results
+                </label>
+                <label class="inline-flex items-center gap-2 cursor-pointer">
+                  <input id="headlessInput" type="checkbox" class="accent-coral" />
+                  headless (no window)
+                </label>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-3 pt-2">
+                <button id="runBtn" type="submit"
+                  class="group inline-flex items-center gap-2.5 rounded-full bg-coral text-ink font-semibold px-6 py-3 hover:bg-lime transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                  <span id="runBtnLabel">Run scrape now</span>
+                  <span class="grid place-items-center h-6 w-6 rounded-full bg-ink/15 group-hover:translate-x-0.5 transition-transform" aria-hidden="true">→</span>
+                </button>
+                <button id="stopBtn" type="button"
+                  class="hidden inline-flex items-center gap-2 rounded-full border hairline text-paper font-semibold px-5 py-3 hover:border-coral transition-colors">
+                  Stop
+                </button>
+                <span id="runStatus" class="font-mono text-[11px] text-muted"></span>
+              </div>
+            </form>
+          </div>
+
+          <!-- run progress (timer + bar) + live stream -->
+          <div class="space-y-5">
+            <div class="rounded-2xl border hairline bg-ink overflow-hidden">
+              <div class="flex items-center justify-between px-5 py-3 border-b hairline">
+                <span class="font-mono text-[11px] text-muted">progress</span>
+                <span id="progPct" class="font-mono text-[11px] text-lime">0%</span>
+              </div>
+              <div class="px-5 py-5">
+                <!-- timer -->
+                <div class="flex items-end justify-between mb-4">
+                  <span class="font-mono text-[11px] uppercase tracking-wider text-muted">Elapsed</span>
+                  <span id="progTimer" class="font-mono text-2xl sm:text-3xl text-paper tabular-nums leading-none">00:00</span>
+                </div>
+                <!-- bar -->
+                <div class="h-3 w-full rounded-full bg-paper/10 overflow-hidden">
+                  <div id="progBar" class="h-full w-0 rounded-full bg-coral transition-all duration-500"></div>
+                </div>
+                <p id="progNote" class="mt-3 font-mono text-[11px] text-muted">Ready when you are.</p>
+              </div>
+            </div>
+
+            <div class="rounded-2xl border hairline bg-coal/90 overflow-hidden">
+              <div class="flex items-center justify-between px-5 py-3 border-b hairline">
+                <span class="font-mono text-[11px] text-muted">live stream</span>
+                <span id="rowCount" class="font-mono text-[11px] text-muted">rows written: 0</span>
+              </div>
+              <ul id="leadStream" class="divide-y divide-paper/5 min-h-[160px]"></ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- live scrape log (hidden until a run starts) -->
+        <div id="logPanel" class="hidden relative mt-6 rounded-2xl border hairline bg-ink overflow-hidden">
+          <div class="flex items-center justify-between px-5 py-3 border-b hairline">
+            <span class="font-mono text-[11px] text-muted">scrape log</span>
+            <span id="logStatus" class="flex items-center gap-1.5 font-mono text-[11px] text-lime">
+              <span class="h-1.5 w-1.5 rounded-full bg-lime pulse"></span> running
+            </span>
+          </div>
+          <pre id="logOut" class="px-5 py-4 font-mono text-[11px] leading-relaxed text-muted max-h-72 overflow-y-auto whitespace-pre-wrap break-words"></pre>
+        </div>
+      </section>
+
+      <!-- ░░ RESULTS ░░ -->
+      <section>
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6">
+          <div>
+            <p class="font-mono text-xs uppercase tracking-[0.25em] text-lime mb-3">Your leads</p>
+            <h2 class="font-display font-bold text-[clamp(1.6rem,4vw,2.4rem)] leading-tight tracking-tight">
+              Live <span class="text-coral">leads.</span>
+            </h2>
+          </div>
+          <p class="max-w-sm text-muted leading-relaxed text-sm">
+            Every scrape is de-duplicated on Yelp URL. Search, browse and export below.
+          </p>
+        </div>
+
+        <!-- toolbar -->
+        <div class="flex flex-wrap items-center gap-3 mb-5">
+          <input id="searchInput" type="text" placeholder="Search name or location…"
+            class="flex-1 min-w-[200px] rounded-xl bg-coal border hairline px-4 py-2.5 text-sm text-paper placeholder-muted/50 focus:outline-none focus:border-coral transition-colors" />
+          <button id="refreshBtn" type="button"
+            class="rounded-xl border hairline px-4 py-2.5 text-sm font-mono text-muted hover:text-paper hover:border-lime/40 transition-colors">refresh</button>
+          <a id="exportBtn" href="/api/businesses.csv"
+            class="rounded-xl bg-paper text-ink px-4 py-2.5 text-sm font-semibold hover:bg-lime transition-colors">Export CSV</a>
+        </div>
+
+        <!-- table -->
+        <div class="rounded-2xl border hairline bg-coal/60 overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="font-mono text-[11px] uppercase tracking-wider text-muted border-b hairline">
+                <tr>
+                  <th class="text-left px-5 py-3 font-normal">Company</th>
+                  <th class="text-left px-5 py-3 font-normal">Niche</th>
+                  <th class="text-left px-5 py-3 font-normal">Phone</th>
+                  <th class="text-left px-5 py-3 font-normal">Location</th>
+                  <th class="text-left px-5 py-3 font-normal">Website</th>
+                  <th class="px-5 py-3"></th>
+                </tr>
+              </thead>
+              <tbody id="resultsBody" class="divide-y divide-paper/5">
+                <tr><td colspan="6" class="px-5 py-10 text-center text-muted">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="flex items-center justify-between px-5 py-3 border-t hairline font-mono text-[11px] text-muted">
+            <span id="resultsCount">0 leads</span>
+            <div class="flex items-center gap-3">
+              <button id="prevPage" class="hover:text-paper transition-colors disabled:opacity-40" disabled>← prev</button>
+              <span id="pageInfo">page 1</span>
+              <button id="nextPage" class="hover:text-paper transition-colors disabled:opacity-40" disabled>next →</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="js/dashboard.js" defer></script>
+</body>
+</html>
