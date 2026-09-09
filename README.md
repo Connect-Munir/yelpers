@@ -79,7 +79,6 @@ Collects comprehensive business information from Yelp searches:
 ├── scraper.py                 # Selenium-based Yelp scraper
 ├── gui.py                     # Desktop GUI (tkinter)
 ├── config.json                # Scraper configuration
-├── CLAUDE.md                  # Project documentation
 └── README.md                  # This file
 ```
 
@@ -514,7 +513,6 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 
 For issues, suggestions, or questions:
 - Check troubleshooting section above
-- Review CLAUDE.md for project-specific details
 - Examine API documentation at `/docs` endpoint
 - Check backend logs for detailed error messages
 
